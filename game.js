@@ -63,96 +63,96 @@ function neuralNetwork(context, input_x, input_y) {
   const x_3 = input_y * input_y;
 
   // first layer
-  w_00 = params["weights"]["input_layer"];
-  b_00 = params["biases"]["input_layer"];
-  z_00 =
+  const w_00 = params["weights"]["input_layer"];
+  const b_00 = params["biases"]["input_layer"];
+  const z_00 =
     w_00[0][0] * x_0 +
     w_00[0][1] * x_1 +
     w_00[0][2] * x_2 +
     w_00[0][3] * x_3 +
     b_00[0];
-  a_00 = Math.max(0, z_00);
-  z_01 =
+  const a_00 = Math.max(0, z_00);
+  const z_01 =
     w_00[1][0] * x_0 +
     w_00[1][1] * x_1 +
     w_00[1][2] * x_2 +
     w_00[1][3] * x_3 +
     b_00[1];
-  a_01 = Math.max(0, z_01);
-  z_02 =
+  const a_01 = Math.max(0, z_01);
+  const z_02 =
     w_00[2][0] * x_0 +
     w_00[2][1] * x_1 +
     w_00[2][2] * x_2 +
     w_00[2][3] * x_3 +
     b_00[2];
-  a_02 = Math.max(0, z_02);
-  z_03 =
+  const a_02 = Math.max(0, z_02);
+  const z_03 =
     w_00[3][0] * x_0 +
     w_00[3][1] * x_1 +
     w_00[3][2] * x_2 +
     w_00[3][3] * x_3 +
     b_00[3];
-  a_03 = Math.max(0, z_03);
+  const a_03 = Math.max(0, z_03);
 
   // second layer
-  w_01 = params["weights"]["hidden_layer_1"];
-  b_01 = params["biases"]["hidden_layer_1"];
-  z_10 =
+  const w_01 = params["weights"]["hidden_layer_1"];
+  const b_01 = params["biases"]["hidden_layer_1"];
+  const z_10 =
     w_01[0][0] * a_00 +
     w_01[0][1] * a_01 +
     w_01[0][2] * a_02 +
     w_01[0][3] * a_03 +
     b_01[0];
-  a_10 = Math.max(0, z_10);
-  z_11 =
+  const a_10 = Math.max(0, z_10);
+  const z_11 =
     w_01[1][0] * a_00 +
     w_01[1][1] * a_01 +
     w_01[1][2] * a_02 +
     w_01[1][3] * a_03 +
     b_01[1];
-  a_11 = Math.max(0, z_11);
-  z_12 =
+  const a_11 = Math.max(0, z_11);
+  const z_12 =
     w_01[2][0] * a_00 +
     w_01[2][1] * a_01 +
     w_01[2][2] * a_02 +
     w_01[2][3] * a_03 +
     b_01[2];
-  a_12 = Math.max(0, z_12);
-  z_13 =
+  const a_12 = Math.max(0, z_12);
+  const z_13 =
     w_01[3][0] * a_00 +
     w_01[3][1] * a_01 +
     w_01[3][2] * a_02 +
     w_01[3][3] * a_03 +
     b_01[3];
-  a_13 = Math.max(0, z_13);
+  const a_13 = Math.max(0, z_13);
 
   // third layer
-  w_02 = params["weights"]["hidden_layer_2"];
-  b_02 = params["biases"]["hidden_layer_2"];
-  z_20 =
+  const w_02 = params["weights"]["hidden_layer_2"];
+  const b_02 = params["biases"]["hidden_layer_2"];
+  const z_20 =
     w_02[0][0] * a_10 +
     w_02[0][1] * a_11 +
     w_02[0][2] * a_12 +
     w_02[0][3] * a_13 +
     b_02[0];
-  a_20 = Math.max(0, z_20);
-  z_21 =
+  const a_20 = Math.max(0, z_20);
+  const z_21 =
     w_02[1][0] * a_10 +
     w_02[1][1] * a_11 +
     w_02[1][2] * a_12 +
     w_02[1][3] * a_13 +
     b_02[1];
-  a_21 = Math.max(0, z_21);
+  const a_21 = Math.max(0, z_21);
 
   // output layer
-  w_03 = params["weights"]["output_layer"];
-  b_03 = params["biases"]["output_layer"];
+  const w_03 = params["weights"]["output_layer"];
+  const b_03 = params["biases"]["output_layer"];
 
   //now we introduce game inputs
-  w_0 = w_03[0][0] + (sViewXRel + context.randomAddition) * 10;
-  w_1 = w_03[0][1] + (sViewYRel + context.randomAddition) * 10;
+  const w_0 = w_03[0][0] + (sViewXRel + context.randomAddition) * 10;
+  const w_1 = w_03[0][1] + (sViewYRel + context.randomAddition) * 10;
 
-  y_hat = w_0 * a_20 + w_1 * a_21 + b_03[0];
+  var y_hat = w_0 * a_20 + w_1 * a_21 + b_03[0];
   y_hat = sigmoid(y_hat);
 
   return { y_hat: y_hat, a: a_20, b: a_21 };
@@ -162,8 +162,8 @@ function gradient(context) {
   const params = context.params;
   const data = context.data;
   // We use an L2 loss function (L_2 = \Sum(y - y_hat)^2)
-  dLdp1 = 0;
-  dLdp2 = 0;
+  var dLdp1 = 0;
+  var dLdp2 = 0;
   for (let i = 0; i < data["class_0"].length; i++) {
     const x = data["class_0"][i][0];
     const y = data["class_0"][i][1];
