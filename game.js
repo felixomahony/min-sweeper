@@ -1,4 +1,4 @@
-//import phaser
+//import Phaser
 import Phaser from "phaser";
 
 // Global variables
@@ -9,6 +9,7 @@ const numClass = 20;
 const skyblue = 0x87ceeb;
 const lightpink = 0xffb6c1;
 const pastelorange = 0xffb347;
+const pastelorangeHex = "#ffb347";
 const lightgray = 0xf4f4f4;
 const darkgray = 0xe1e1e1;
 const titleSize = 20;
@@ -38,6 +39,7 @@ var sViewYRel = 0;
 
 //score
 var total_score = 0;
+var computer_score = 0;
 
 // Global functions
 //neural network functions
@@ -51,7 +53,8 @@ function sigmoid(x) {
   return 1 / (1 + Math.exp(-x));
 }
 
-function neuralNetwork(params, input_x, input_y) {
+function neuralNetwork(context, input_x, input_y) {
+  const params = context.params;
   //Apply Neural Network Function to inputs x and y
   // feature map
   const x_0 = input_x;
@@ -146,8 +149,8 @@ function neuralNetwork(params, input_x, input_y) {
   b_03 = params["biases"]["output_layer"];
 
   //now we introduce game inputs
-  w_0 = w_03[0][0] + sViewXRel * 10;
-  w_1 = w_03[0][1] + sViewYRel * 10;
+  w_0 = w_03[0][0] + (sViewXRel + context.randomAddition) * 10;
+  w_1 = w_03[0][1] + (sViewYRel + context.randomAddition) * 10;
 
   y_hat = w_0 * a_20 + w_1 * a_21 + b_03[0];
   y_hat = sigmoid(y_hat);
@@ -164,7 +167,7 @@ function gradient(context) {
   for (let i = 0; i < data["class_0"].length; i++) {
     const x = data["class_0"][i][0];
     const y = data["class_0"][i][1];
-    const retVal = neuralNetwork(params, x, y);
+    const retVal = neuralNetwork(context, x, y);
     const y_hat = retVal.y_hat;
     const a = retVal.a;
     const b = retVal.b;
@@ -175,7 +178,7 @@ function gradient(context) {
   for (let i = 0; i < data["class_1"].length; i++) {
     const x = data["class_1"][i][0];
     const y = data["class_1"][i][1];
-    const retVal = neuralNetwork(params, x, y);
+    const retVal = neuralNetwork(context, x, y);
     const y_hat = retVal.y_hat;
     const a = retVal.a;
     const b = retVal.b;
@@ -210,12 +213,12 @@ function score(context) {
   const data = context.data;
 
   const correct_0 = data["class_0"].map((coordinates, index) => {
-    const retVal = neuralNetwork(params, coordinates[0], coordinates[1]);
+    const retVal = neuralNetwork(context, coordinates[0], coordinates[1]);
     return retVal.y_hat < 0.5;
   });
 
   const correct_1 = data["class_1"].map((coordinates, index) => {
-    const retVal = neuralNetwork(params, coordinates[0], coordinates[1]);
+    const retVal = neuralNetwork(context, coordinates[0], coordinates[1]);
     return retVal.y_hat > 0.5;
   });
 
@@ -389,7 +392,7 @@ function drawBackground(context) {
     for (let j = dViewY; j <= dViewY + dViewHeight; j += dViewGridCellSize) {
       const x = ((i - dViewX) / dViewWidth) * 2 - 1;
       const y = ((j - dViewY) / dViewHeight) * 2 - 1;
-      const retVal = neuralNetwork(context.params, x, y);
+      const retVal = neuralNetwork(context, x, y);
       const z = retVal.y_hat;
       var color = Phaser.Display.Color.ValueToColor(skyblue);
       if (z > 0.3 && z < 0.5) {
@@ -460,6 +463,8 @@ function createLevel(context, level) {
   drawBackground(context);
 
   context.userUpdate = true;
+  //set random number to add to the true zero
+  context.randomAddition = Math.random() - 0.5;
 
   //add circles for each input datum
   context.class_0 = context.data["class_0"].map((coordinates, index) => {
@@ -507,33 +512,6 @@ function createLevel(context, level) {
     .setOrigin(0, 0)
     .setDepth(-1);
 
-  //add score background
-  context.scoreBg = context.add
-    .image(95, 0, "scoreBg")
-    .setOrigin(0, 0)
-    .setDepth(-1);
-  context.scoreText = context.add
-    .text(0, 9, "Score", {
-      fontFamily: "DIN Condensed",
-      fontSize: titleSize,
-      color: "#000000",
-    })
-    .setOrigin(0, 0)
-    .setDepth(-1);
-  const scoreTextSize = context.scoreText.displayWidth;
-  context.scoreText.setPosition(95 + 40 - scoreTextSize / 2, textYOffset);
-
-  context.score = context.add
-    .text(0, 9, parseInt(total_score * 100), {
-      fontFamily: "DIN Condensed",
-      fontSize: textSize,
-      color: "#000000",
-    })
-    .setOrigin(0, 0)
-    .setDepth(-1);
-  const scoreSize = context.score.displayWidth;
-  context.score.setPosition(95 + 40 - scoreSize / 2, textYOffset + titleSize);
-
   //add level background
   context.levelBg = context.add
     .image(0, 0, "scoreBg")
@@ -557,10 +535,10 @@ function createLevel(context, level) {
 
   // add the accuracy
   context.accuracyBg = context.add
-    .image(dViewX + dViewWidth - 80, 0, "yourScore")
+    .image(dViewX + dViewWidth - 80, 0, "compScore")
     .setOrigin(0, 0)
     .setDepth(-1);
-  context.accuracyText = context.add.text(95, 0, "Accuracy", {
+  context.accuracyText = context.add.text(95, 0, "You", {
     fontFamily: "DIN Condensed",
     fontSize: titleSize,
     color: "#000000",
@@ -571,7 +549,7 @@ function createLevel(context, level) {
     textYOffset
   );
 
-  context.accuracy = context.add.text(95, 0, "0%", {
+  context.accuracy = context.add.text(95, 0, parseInt(total_score * 100), {
     fontFamily: "DIN Condensed",
     fontSize: textSize,
     color: "#000000",
@@ -580,20 +558,15 @@ function createLevel(context, level) {
   const accuracySize = context.accuracy.displayWidth;
   context.accuracy.setPosition(
     dViewX + dViewWidth - 40 - accuracySize / 2,
-    4 + titleSize
+    textYOffset + titleSize
   );
-
-  // hide accuracy
-  context.accuracyBg.setVisible(false);
-  context.accuracyText.setVisible(false);
-  context.accuracy.setVisible(false);
 
   // add computer accuracy
   context.computerAccuracyBg = context.add
     .image(dViewX + dViewWidth - 80 - 15 - 80, 0, "compScore")
     .setOrigin(0, 0)
     .setDepth(-1);
-  context.computerAccuracyText = context.add.text(95, 0, "Gradient", {
+  context.computerAccuracyText = context.add.text(95, 0, "Computer", {
     fontFamily: "DIN Condensed",
     fontSize: titleSize,
     color: "#000000",
@@ -604,22 +577,22 @@ function createLevel(context, level) {
     textYOffset
   );
 
-  context.computerAccuracy = context.add.text(95, 0, "0%", {
-    fontFamily: "DIN Condensed",
-    fontSize: textSize,
-    color: "#000000",
-  });
+  context.computerAccuracy = context.add.text(
+    95,
+    0,
+    parseInt(computer_score * 100),
+    {
+      fontFamily: "DIN Condensed",
+      fontSize: textSize,
+      color: "#000000",
+    }
+  );
 
   const computerAccuracySize = context.computerAccuracy.displayWidth;
   context.computerAccuracy.setPosition(
     dViewX + dViewWidth - 40 - 80 - 15 - computerAccuracySize / 2,
     textYOffset + titleSize
   );
-
-  // hide computer accuracy
-  context.computerAccuracyBg.setVisible(false);
-  context.computerAccuracyText.setVisible(false);
-  context.computerAccuracy.setVisible(false);
 }
 
 function updateLevel(context, level) {
@@ -733,15 +706,14 @@ function pointerDown(context, level) {
       const sc = score(context);
       console.log("score: " + sc);
       //update accuracy text
-      context.accuracy.setText(parseInt(sc * 100) + "%");
+      context.accuracy.setText("+" + parseInt(sc * 100));
+      //change accuracy text color
+      context.accuracy.setColor(pastelorangeHex);
       const accuracySize = context.accuracy.displayWidth;
       context.accuracy.setPosition(
         dViewX + dViewWidth - 40 - accuracySize / 2,
         textYOffset + titleSize
       );
-      context.accuracyBg.setVisible(true);
-      context.accuracyText.setVisible(true);
-      context.accuracy.setVisible(true);
 
       //update score value
       total_score = total_score + sc;
@@ -766,9 +738,13 @@ function pointerDown(context, level) {
 
           //set computer accuracy
           const sc = score(context);
+          computer_score = computer_score + sc;
           console.log("computer score: " + sc);
           //update accuracy text
-          context.computerAccuracy.setText(parseInt(sc * 100) + "%");
+          context.computerAccuracy.setColor(pastelorangeHex);
+          context.computerAccuracy.setText("+" + parseInt(sc * 100));
+          //change accuracy text color
+
           const accuracySize = context.computerAccuracy.displayWidth;
           context.computerAccuracy.setPosition(
             dViewX + dViewWidth - 40 - 80 - 15 - accuracySize / 2,
@@ -800,6 +776,95 @@ function pointerDown(context, level) {
 }
 
 // Levels
+//introduction
+class Introduction extends Phaser.Scene {
+  constructor() {
+    super("introduction");
+  }
+
+  preload() {
+    this.load.image("next", "assets/next.png");
+    this.load.image("next_depressed", "assets/next_depressed.png");
+  }
+  create() {
+    //Add welcome text
+    this.welcomeText = this.add.text(
+      width / 2,
+      height / 2 - 100,
+      "Welcome to Min Sweeper!",
+      {
+        fontFamily: "DIN Condensed",
+        fontSize: textSize,
+        color: "#000",
+        align: "center",
+      }
+    );
+    this.welcomeText.setOrigin(0, 0);
+    var textWidth = this.welcomeText.displayWidth;
+    this.welcomeText.setPosition(width / 2 - textWidth / 2, height / 2 - 100);
+
+    //Add instructions text
+    this.instructionsText = this.add.text(
+      width / 2,
+      height / 2 - 50,
+      "Your goal is to choose parameters x and y to best classify the data points shown. \n You will be competing against a computer player using stochastic gradient descent to solve the same problem. \n Good luck!",
+      {
+        fontFamily: "DIN Condensed",
+        fontSize: titleSize,
+        color: "#000",
+        align: "center",
+      }
+    );
+    this.instructionsText.setOrigin(0, 0);
+    textWidth = this.instructionsText.displayWidth;
+    this.instructionsText.setPosition(
+      width / 2 - textWidth / 2,
+      height / 2 - 100 + textSize + 4
+    );
+
+    // Add start button (next)
+    this.next = this.add.image(width / 2, height / 2 + 100, "next");
+    // Add start button (next)
+    this.next_depressed = this.add.image(
+      width / 2,
+      height / 2 + 100,
+      "next_depressed"
+    );
+
+    // Add onclick
+    this.input.on(
+      "pointerdown",
+      (pointer) => {
+        console.log("pointer");
+        if (
+          this.input.mousePointer.x > width / 2 - 40 &&
+          this.input.mousePointer.x < width / 2 + 40 &&
+          this.input.mousePointer.y > height / 2 + 100 - 43 &&
+          this.input.mousePointer.y < height / 2 + 100 + 43
+        ) {
+          console.log("starting scene 0");
+          this.scene.start("level_0");
+        }
+      },
+      this
+    );
+  }
+  update() {
+    if (
+      this.input.mousePointer.x > width / 2 - 40 &&
+      this.input.mousePointer.x < width / 2 + 40 &&
+      this.input.mousePointer.y > height / 2 + 100 - 43 &&
+      this.input.mousePointer.y < height / 2 + 100 + 43
+    ) {
+      this.next_depressed.setVisible(true);
+      this.next.setVisible(false);
+    } else {
+      this.next_depressed.setVisible(false);
+      this.next.setVisible(true);
+    }
+  }
+}
+
 //level 0
 class Level_0 extends Phaser.Scene {
   constructor() {
@@ -945,12 +1010,171 @@ class Level_4 extends Phaser.Scene {
   }
 }
 
+// Levels
+//Level 5 (goodbye)
+class Level_5 extends Phaser.Scene {
+  constructor() {
+    super("level_5");
+  }
+
+  preload() {
+    this.load.image("restart", "assets/restart.png");
+    this.load.image("restart_depressed", "assets/restart_depressed.png");
+    this.load.image("compScore", "assets/compScore.png");
+  }
+  create() {
+    //Add welcome text
+    this.welcomeText = this.add.text(
+      width / 2,
+      height / 2 - 100,
+      total_score > computer_score ? "Congratulations" : "Get 'em next time",
+      {
+        fontFamily: "DIN Condensed",
+        fontSize: textSize,
+        color: "#000",
+        align: "center",
+      }
+    );
+    this.welcomeText.setOrigin(0, 0);
+    var textWidth = this.welcomeText.displayWidth;
+    this.welcomeText.setPosition(
+      width / 2 - textWidth / 2,
+      height / 2 - 100 - 87 - 30
+    );
+
+    //Add instructions text
+    this.instructionsText = this.add.text(
+      width / 2,
+      height / 2 - 50,
+      total_score > computer_score
+        ? "You beat the gradient descent algorithm!\nEver considered a career as a supercomputer?"
+        : "Bad luck, you didn't perform as well as the gradient descent algorithm.\nBetter luck next time.",
+      {
+        fontFamily: "DIN Condensed",
+        fontSize: titleSize,
+        color: "#000",
+        align: "center",
+      }
+    );
+    this.instructionsText.setOrigin(0, 0);
+    textWidth = this.instructionsText.displayWidth;
+    this.instructionsText.setPosition(
+      width / 2 - textWidth / 2,
+      height / 2 - 100 + textSize + 4
+    );
+
+    // Add start button (next)
+    this.next = this.add.image(width / 2, height / 2 + 100, "restart");
+    // Add start button (next)
+    this.next_depressed = this.add.image(
+      width / 2,
+      height / 2 + 100,
+      "restart_depressed"
+    );
+
+    // add the accuracy
+    this.accuracyBg = this.add
+      .image(width / 2 - 88, height / 2 - 100 - 87 - 15 + textSize, "compScore")
+      .setOrigin(0, 0)
+      .setDepth(-1);
+    this.accuracyText = this.add.text(95, 0, "You", {
+      fontFamily: "DIN Condensed",
+      fontSize: titleSize,
+      color: "#000000",
+    });
+    const accuracyTextSize = this.accuracyText.displayWidth;
+    this.accuracyText.setPosition(
+      width / 2 - 48 - accuracyTextSize / 2,
+      textYOffset + height / 2 - 100 - 87 - 15 + textSize
+    );
+
+    this.accuracy = this.add.text(95, 0, parseInt(total_score * 100), {
+      fontFamily: "DIN Condensed",
+      fontSize: textSize,
+      color: "#000000",
+    });
+
+    const accuracySize = this.accuracy.displayWidth;
+    this.accuracy.setPosition(
+      width / 2 - 48 - accuracySize / 2,
+      textYOffset + titleSize + height / 2 - 100 - 87 - 15 + textSize
+    );
+
+    // add computer accuracy
+    this.computerAccuracyBg = this.add
+      .image(width / 2 + 8, height / 2 - 100 - 87 - 15 + textSize, "compScore")
+      .setOrigin(0, 0)
+      .setDepth(-1);
+    this.computerAccuracyText = this.add.text(95, 0, "Computer", {
+      fontFamily: "DIN Condensed",
+      fontSize: titleSize,
+      color: "#000000",
+    });
+    const computerAccuracyTextSize = this.computerAccuracyText.displayWidth;
+    this.computerAccuracyText.setPosition(
+      width / 2 + 48 - computerAccuracyTextSize / 2,
+      textYOffset + height / 2 - 100 - 87 - 15 + textSize
+    );
+
+    this.computerAccuracy = this.add.text(
+      95,
+      0,
+      parseInt(computer_score * 100),
+      {
+        fontFamily: "DIN Condensed",
+        fontSize: textSize,
+        color: "#000000",
+      }
+    );
+
+    const computerAccuracySize = this.computerAccuracy.displayWidth;
+    this.computerAccuracy.setPosition(
+      width / 2 + 48 - computerAccuracySize / 2,
+      textYOffset + titleSize + height / 2 - 100 - 87 - 15 + textSize
+    );
+
+    // Add onclick
+    this.input.on(
+      "pointerdown",
+      (pointer) => {
+        console.log("pointer");
+        if (
+          this.input.mousePointer.x > width / 2 - 40 &&
+          this.input.mousePointer.x < width / 2 + 40 &&
+          this.input.mousePointer.y > height / 2 + 100 - 43 &&
+          this.input.mousePointer.y < height / 2 + 100 + 43
+        ) {
+          console.log("starting introduction");
+          total_score = 0;
+          computer_score = 0;
+          this.scene.start("introduction");
+        }
+      },
+      this
+    );
+  }
+  update() {
+    if (
+      this.input.mousePointer.x > width / 2 - 40 &&
+      this.input.mousePointer.x < width / 2 + 40 &&
+      this.input.mousePointer.y > height / 2 + 100 - 43 &&
+      this.input.mousePointer.y < height / 2 + 100 + 43
+    ) {
+      this.next_depressed.setVisible(true);
+      this.next.setVisible(false);
+    } else {
+      this.next_depressed.setVisible(false);
+      this.next.setVisible(true);
+    }
+  }
+}
+
 const config = {
   type: Phaser.AUTO,
   width: width,
   height: height,
   backgroundColor: "fff",
-  scene: [Level_0, Level_1, Level_2, Level_3, Level_4],
+  scene: [Introduction, Level_0, Level_1, Level_2, Level_3, Level_4, Level_5],
   antialias: true,
 };
 
