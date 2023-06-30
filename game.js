@@ -1,3 +1,6 @@
+//import phaser
+import Phaser from "phaser";
+
 // Global variables
 //set up the renderer
 const height = 512;
