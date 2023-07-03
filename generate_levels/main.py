@@ -16,7 +16,7 @@ import network as network
 import generate_data as generate_data
 
 
-levels = [4]
+levels = [0,1,2,3,4]
 
 if __name__ == '__main__':
     # Generate data

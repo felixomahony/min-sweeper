@@ -5,16 +5,15 @@ import Phaser from "phaser";
 //set up the renderer
 const height = 512;
 const width = 900;
-const numClass = 20;
 const skyblue = 0x87ceeb;
 const lightpink = 0xffb6c1;
 const pastelorange = 0xffb347;
 const pastelorangeHex = "#ffb347";
 const lightgray = 0xf4f4f4;
 const darkgray = 0xe1e1e1;
-const titleSize = 20;
-const textSize = 40;
-const textYOffset = 10;
+const titleSize = 16;
+const textSize = 32;
+const textYOffset = 14;
 
 //data view - where the neural network output is displayed
 const dViewWidth = 400;
@@ -28,8 +27,6 @@ const sViewWidth = 400;
 const sViewHeight = 400;
 const sViewX = 0;
 const sViewY = 105;
-const gridCellSize = 50;
-const dashSize = 5;
 const sViewGridCellSize = 50;
 const sViewMinorGridCellSize = 50;
 
@@ -43,10 +40,6 @@ var computer_score = 0;
 
 // Global functions
 //neural network functions
-function ReLu(x) {
-  //Apply ReLu function to input x
-  return Math.max(0, x);
-}
 
 function sigmoid(x) {
   //Apply Sigmoid function to input x
@@ -159,7 +152,6 @@ function neuralNetwork(context, input_x, input_y) {
 }
 
 function gradient(context) {
-  const params = context.params;
   const data = context.data;
   // We use an L2 loss function (L_2 = \Sum(y - y_hat)^2)
   var dLdp1 = 0;
@@ -357,7 +349,7 @@ function drawBorderDashes(context) {
   context.add
     .text(sViewX + 30, sViewY + 45, "y", {
       fontFamily: "Arial",
-      fontSize: 20,
+      fontSize: 16,
       color: "#000000",
     })
     .setDepth(0);
@@ -442,6 +434,8 @@ function drawBackground(context) {
 
 //level functions
 function preloadLevel(context) {
+  //test if font has imported
+  console.log("preloading level");
   // Load image
   context.load.image("next", "assets/next.png");
   context.load.image("next_depressed", "assets/next_depressed.png");
@@ -518,7 +512,7 @@ function createLevel(context, level) {
     .setOrigin(0, 0)
     .setDepth(-1);
   context.levelText = context.add.text(95, 0, "Level", {
-    fontFamily: "DIN Condensed",
+    fontFamily: "Archivo Narrow",
     fontSize: titleSize,
     color: "#000000",
   });
@@ -526,7 +520,7 @@ function createLevel(context, level) {
   context.levelText.setPosition(40 - levelTextSize / 2, textYOffset);
 
   context.level = context.add.text(95, 0, level + 1 + "/5", {
-    fontFamily: "DIN Condensed",
+    fontFamily: "Archivo Narrow",
     fontSize: textSize,
     color: "#000000",
   });
@@ -539,7 +533,7 @@ function createLevel(context, level) {
     .setOrigin(0, 0)
     .setDepth(-1);
   context.accuracyText = context.add.text(95, 0, "You", {
-    fontFamily: "DIN Condensed",
+    fontFamily: "Archivo Narrow",
     fontSize: titleSize,
     color: "#000000",
   });
@@ -550,7 +544,7 @@ function createLevel(context, level) {
   );
 
   context.accuracy = context.add.text(95, 0, parseInt(total_score * 100), {
-    fontFamily: "DIN Condensed",
+    fontFamily: "Archivo Narrow",
     fontSize: textSize,
     color: "#000000",
   });
@@ -567,7 +561,7 @@ function createLevel(context, level) {
     .setOrigin(0, 0)
     .setDepth(-1);
   context.computerAccuracyText = context.add.text(95, 0, "Computer", {
-    fontFamily: "DIN Condensed",
+    fontFamily: "Archivo Narrow",
     fontSize: titleSize,
     color: "#000000",
   });
@@ -582,7 +576,7 @@ function createLevel(context, level) {
     0,
     parseInt(computer_score * 100),
     {
-      fontFamily: "DIN Condensed",
+      fontFamily: "Archivo Narrow",
       fontSize: textSize,
       color: "#000000",
     }
@@ -793,7 +787,8 @@ class Introduction extends Phaser.Scene {
       height / 2 - 100,
       "Welcome to Min Sweeper!",
       {
-        fontFamily: "DIN Condensed",
+        fontFamily: "Roboto",
+        fontStyle: '700',
         fontSize: textSize,
         color: "#000",
         align: "center",
@@ -809,7 +804,7 @@ class Introduction extends Phaser.Scene {
       height / 2 - 50,
       "Your goal is to choose parameters x and y to best classify the data points shown. \n You will be competing against a computer player using stochastic gradient descent to solve the same problem. \n Good luck!",
       {
-        fontFamily: "DIN Condensed",
+        fontFamily: "Roboto",
         fontSize: titleSize,
         color: "#000",
         align: "center",
@@ -1029,7 +1024,8 @@ class Level_5 extends Phaser.Scene {
       height / 2 - 100,
       total_score > computer_score ? "Congratulations" : "Get 'em next time",
       {
-        fontFamily: "DIN Condensed",
+        fontFamily: "Roboto",
+        fontStyle: '700',
         fontSize: textSize,
         color: "#000",
         align: "center",
@@ -1050,7 +1046,7 @@ class Level_5 extends Phaser.Scene {
         ? "You beat the gradient descent algorithm!\nEver considered a career as a supercomputer?"
         : "Bad luck, you didn't perform as well as the gradient descent algorithm.\nBetter luck next time.",
       {
-        fontFamily: "DIN Condensed",
+        fontFamily: "Roboto",
         fontSize: titleSize,
         color: "#000",
         align: "center",
@@ -1078,7 +1074,7 @@ class Level_5 extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(-1);
     this.accuracyText = this.add.text(95, 0, "You", {
-      fontFamily: "DIN Condensed",
+      fontFamily: "Archivo Narrow",
       fontSize: titleSize,
       color: "#000000",
     });
@@ -1089,7 +1085,7 @@ class Level_5 extends Phaser.Scene {
     );
 
     this.accuracy = this.add.text(95, 0, parseInt(total_score * 100), {
-      fontFamily: "DIN Condensed",
+      fontFamily: "Archivo Narrow",
       fontSize: textSize,
       color: "#000000",
     });
@@ -1106,7 +1102,7 @@ class Level_5 extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(-1);
     this.computerAccuracyText = this.add.text(95, 0, "Computer", {
-      fontFamily: "DIN Condensed",
+      fontFamily: "Archivo Narrow",
       fontSize: titleSize,
       color: "#000000",
     });
@@ -1121,7 +1117,7 @@ class Level_5 extends Phaser.Scene {
       0,
       parseInt(computer_score * 100),
       {
-        fontFamily: "DIN Condensed",
+        fontFamily: "Archivo Narrow",
         fontSize: textSize,
         color: "#000000",
       }

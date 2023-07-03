@@ -14,10 +14,26 @@ module.exports = {
         use: 'babel-loader', // Use Babel to transpile JavaScript files
       },
       {
-        test: /\.json$/,
-        loader: 'json-loader',
-        type: 'javascript/auto',
+        test: /\.(woff|woff2|ttf|otf)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              outputPath: 'fonts/',
+            },
+          },
+        ],
       },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      // {
+      //   test: /\.json$/,
+      //   loader: 'json-loader',
+      //   type: 'javascript/auto',
+      // },
     ],
   },
 };
