@@ -29,11 +29,11 @@ module.exports = {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
-      // {
-      //   test: /\.json$/,
-      //   loader: 'json-loader',
-      //   type: 'javascript/auto',
-      // },
+      {
+        test: /\.json$/,
+        loader: 'json-loader',
+        type: 'javascript/auto',
+      },
     ],
   },
 };
