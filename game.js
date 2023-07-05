@@ -457,6 +457,7 @@ function createLevel(context, level) {
   drawBackground(context);
 
   context.userUpdate = true;
+  context.computerUpdate = true;
   //set random number to add to the true zero
   context.randomAddition = Math.random() - 0.5;
 
@@ -491,7 +492,7 @@ function createLevel(context, level) {
   context.circle2 = context.add
     .circle(-10, -10, 5, 0xffffff)
     .setOrigin(0, 0)
-    .setStrokeStyle(2, pastelorange);
+    .setStrokeStyle(2, pastelorange, 1);
 
   context.traceLine = context.add.graphics().setDepth(-1);
   context.traceLinePts = [];
@@ -587,6 +588,24 @@ function createLevel(context, level) {
     dViewX + dViewWidth - 40 - 80 - 15 - computerAccuracySize / 2,
     textYOffset + titleSize
   );
+
+  // Add text to indicate your guess and computer's guess
+  context.yourGuessText = context.add.text(95, 0, "Your Guess", {
+    fontFamily: "Arial",
+    fontSize: 16,
+    color: "#000000",
+  });
+  context.yourGuessText.setVisible(false);
+  context.yourGuessTextSize = context.yourGuessText.displayWidth;
+
+
+  context.computerGuessText = context.add.text(95, 0, "Computer Guess", {
+    fontFamily: "Arial",
+    fontSize: 16,
+    color: "#000000",
+  });
+  context.computerGuessText.setVisible(false);
+  context.computerGuessTextSize = context.computerGuessText.displayWidth;
 }
 
 function updateLevel(context, level) {
@@ -626,51 +645,65 @@ function updateLevel(context, level) {
       drawBackground(context);
     }
   } else {
-    //move the sprite line to the mouse position
-    if (sViewXRel > 1) {
-      sViewXRel = 1;
-    }
-    if (sViewXRel < -1) {
-      sViewXRel = -1;
-    }
-    if (sViewYRel > 1) {
-      sViewYRel = 1;
-    }
-    if (sViewYRel < -1) {
-      sViewYRel = -1;
-    }
-    const viewportcursorX = ((sViewXRel + 1) / 2) * sViewWidth + sViewX;
-    const viewportcursorY = ((sViewYRel + 1) / 2) * sViewHeight + sViewY;
+    if (context.computerUpdate) {
+      //move the sprite line to the mouse position
+      if (sViewXRel > 1) {
+        sViewXRel = 1;
+      }
+      if (sViewXRel < -1) {
+        sViewXRel = -1;
+      }
+      if (sViewYRel > 1) {
+        sViewYRel = 1;
+      }
+      if (sViewYRel < -1) {
+        sViewYRel = -1;
+      }
+      const viewportcursorX = ((sViewXRel + 1) / 2) * sViewWidth + sViewX;
+      const viewportcursorY = ((sViewYRel + 1) / 2) * sViewHeight + sViewY;
 
-    context.traceLinePts.push({ x: viewportcursorX, y: viewportcursorY });
+      context.traceLinePts.push({ x: viewportcursorX, y: viewportcursorY });
 
-    const alpha = 0.9;
-    const grad = gradient(context);
-    context.grad.dLdp1_norm = context.grad.dLdp1_norm * alpha + grad.dLdp1_norm;
-    context.grad.dLdp2_norm = context.grad.dLdp2_norm * alpha + grad.dLdp2_norm;
+      const alpha = 0.9;
+      const grad = gradient(context);
+      context.grad.dLdp1_norm =
+        context.grad.dLdp1_norm * alpha + grad.dLdp1_norm;
+      context.grad.dLdp2_norm =
+        context.grad.dLdp2_norm * alpha + grad.dLdp2_norm;
 
-    sViewXRel += context.grad.dLdp1_norm * 0.001;
-    sViewYRel += context.grad.dLdp2_norm * 0.001;
+      sViewXRel += context.grad.dLdp1_norm * 0.001;
+      sViewYRel += context.grad.dLdp2_norm * 0.001;
 
-    context.spriteLine1.setTo(0, 0, 0, 0);
-    context.spriteLine2.setTo(0, 0, 0, 0);
+      context.spriteLine1.setTo(0, 0, 0, 0);
+      context.spriteLine2.setTo(0, 0, 0, 0);
 
-    context.circle2.setPosition(viewportcursorX - 5, viewportcursorY - 5);
+      context.circle2.setPosition(viewportcursorX - 5, viewportcursorY - 5);
 
-    context.traceLine.clear();
-    context.traceLine.lineStyle(2, pastelorange);
-    context.traceLine.beginPath();
-    for (let i = 0; i < context.traceLinePts.length; i++) {
-      context.traceLine.lineTo(
-        context.traceLinePts[i].x,
-        context.traceLinePts[i].y
+      context.computerGuessText.setPosition(
+        viewportcursorX - context.computerGuessTextSize / 2,
+        viewportcursorY - 10 - 16
+        
       );
+
+      context.traceLine.clear();
+      context.traceLine.beginPath();
+      for (let i = 0; i < context.traceLinePts.length; i++) {
+        context.traceLine.lineStyle(2, pastelorange,1);
+        if (i % 10 > 5) {
+          // context.traceLine.lineStyle(2, 0x000,0);
+        }
+        context.traceLine.lineTo(
+          context.traceLinePts[i].x,
+          context.traceLinePts[i].y
+        );
+      }
+      context.traceLine.strokePath();
+
+      // console.log("gradient dldp1: " + context.grad.dLdp1);
+      // console.log("gradient dldp2: " + context.grad.dLdp2);
+
+      drawBackground(context);
     }
-    context.traceLine.strokePath();
-
-    // console.log("gradient dldp1: " + context.grad.dLdp1);
-    // console.log("gradient dldp2: " + context.grad.dLdp2);
-
     //check if mouse is over the next button
     if (
       context.input.mousePointer.x > width / 2 - 40 &&
@@ -684,8 +717,6 @@ function updateLevel(context, level) {
       context.next_depressed.setVisible(false);
       context.next.setVisible(true);
     }
-
-    drawBackground(context);
   }
 }
 
@@ -713,6 +744,14 @@ function pointerDown(context, level) {
       total_score = total_score + sc;
 
       context.userUpdate = false;
+
+      //set up your guess text
+      context.yourGuessText.setPosition(
+        context.input.mousePointer.x - context.yourGuessTextSize / 2,
+        context.input.mousePointer.y + 10
+      );
+      context.yourGuessText.setVisible(true);
+
       //randomise sViewXRel and sViewYRel
       // sViewXRel = Math.random() * 2 - 1;
       // sViewYRel = Math.random() * 2 - 1;
@@ -731,6 +770,11 @@ function pointerDown(context, level) {
           );
 
           //set computer accuracy
+          context.computerUpdate = false;
+
+          //set computer guess text
+          context.computerGuessText.setVisible(true);
+
           const sc = score(context);
           computer_score = computer_score + sc;
           console.log("computer score: " + sc);
@@ -788,7 +832,7 @@ class Introduction extends Phaser.Scene {
       "Welcome to Min Sweeper!",
       {
         fontFamily: "Roboto",
-        fontStyle: '700',
+        fontStyle: "700",
         fontSize: textSize,
         color: "#000",
         align: "center",
@@ -1025,7 +1069,7 @@ class Level_5 extends Phaser.Scene {
       total_score > computer_score ? "Congratulations" : "Get 'em next time",
       {
         fontFamily: "Roboto",
-        fontStyle: '700',
+        fontStyle: "700",
         fontSize: textSize,
         color: "#000",
         align: "center",
